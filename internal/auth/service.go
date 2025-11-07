@@ -5,18 +5,18 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
-	"fmt"
 	"encoding/hex"
+	"fmt"
 )
 
 type AuthService struct {
-	oauth *GoogleOAuth
-	jwt   *JWTManager
+	oauth     *GoogleOAuth
+	jwt       *JWTManager
 	user_repo *user.UserRepository
 }
 
 func NewAuthService(oauth *GoogleOAuth, jwt *JWTManager, user_repo *user.UserRepository) *AuthService {
-	return &AuthService{oauth: oauth, jwt: jwt , user_repo: user_repo}
+	return &AuthService{oauth: oauth, jwt: jwt, user_repo: user_repo}
 }
 
 func generateState() string {
@@ -50,7 +50,7 @@ func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*u
 
 	// If not exists — create
 	if existingUser == nil {
-		newUser := user.CreaeteUser{
+		newUser := user.CreateUser{
 			Email: userByJWT.Email,
 			Name:  userByJWT.Name,
 		}

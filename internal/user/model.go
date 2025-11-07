@@ -7,7 +7,7 @@ type UserGoogleResp struct {
 	Picture string `json:"picture"`
 }
 
-type CreaeteUser struct {
+type CreateUser struct {
 	Email      string `json:"email"`
 	Name       string `json:"name"`
 	GitHubUrl  string `json:"github_url"`
@@ -16,6 +16,6 @@ type CreaeteUser struct {
 }
 
 type User struct {
-	CreaeteUser
+	CreateUser
 	ID string `json:"id"`
 }

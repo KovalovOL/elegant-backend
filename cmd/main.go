@@ -24,8 +24,7 @@ func main() {
 	}
 	defer db.Close()
 
-	userRepo := user.NewUserRepository(db)
-
+	
 	googleOAuth, err := auth.NewGoogleOAuth()
 	if err != nil {
 		log.Fatal(err)
@@ -35,7 +34,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
+	userRepo := user.NewUserRepository(db)
+	userService := user.NewUserService(userRepo)
+	userHandler := user.NewUserHandler(userService)
+
 	authService := auth.NewAuthService(googleOAuth, jwtManager, userRepo)
 	authHandler := auth.NewAuthHandler(authService)
 	
@@ -44,10 +47,15 @@ func main() {
 	router.GET("/auth/google/login", authHandler.GoogleLogin)
 	router.GET("/auth/google/callback", authHandler.GoogleCallback)
 
+//	router.DELETE("/user", userHandler.DeleteCurrentUser)
+//	router.PUT("/user", userHandler.UpdateCurrentUser)
+
 	protected := router.Group("/")
 	protected.Use(auth.AuthMiddleware(jwtManager))
 	{
 		protected.GET("/me", authHandler.Me)
+		protected.DELETE("/user", userHandler.DeleteCurrentUser)
+		protected.PUT("/user", userHandler.UpdateCurrentUser)
 	}
 
 	router.Run(":8080")

@@ -13,7 +13,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user CreaeteUser) (int, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, user CreateUser) (int, error) {
 	var userID int
 	err := r.db.QueryRow(
 		`INSERT INTO users (email, name, github_url, linkedin_url, bio) 
@@ -59,12 +59,12 @@ func (r *UserRepository) GetUserById(ctx context.Context, id int) (*User, error)
 	return &user, nil
 }
 
-func (r *UserRepository) DeleteUserByEmail(ctx context.Context, id int) error {
+func (r *UserRepository) DeleteUserById(ctx context.Context, id int) error {
 	_, err := r.db.Exec(`DELETE FROM users WHERE id = $1`, id)
 	return err
 }
 
-func (r *UserRepository) UpdateUserByEmail(ctx context.Context, id int, newUser User) error {
+func (r *UserRepository) UpdateUserById(ctx context.Context, id int, newUser CreateUser) error {
 	_, err := r.db.Exec(
 		`UPDATE users SET name = $1, github_url = $2, linkedin_url = $3, bio = $4 
 		 WHERE id = $5`,

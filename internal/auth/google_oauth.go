@@ -1,0 +1,59 @@
+package auth
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	"os"
+
+	"app/internal/model"
+)
+
+type GoogleOAuth struct {
+	config *oauth2.Config
+}
+
+func NewGoogleOAuth() (*GoogleOAuth, error) {
+	clientID := os.Getenv("GOOGLE_CLIENT_ID")
+	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		return nil, fmt.Errorf("missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET")
+	}
+
+	conf := &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  "http://localhost:8080/auth/google/callback",
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
+		Endpoint:     google.Endpoint,
+	}
+
+	return &GoogleOAuth{config: conf}, nil
+}
+
+func (g *GoogleOAuth) GetAuthURL(state string) string {
+	return g.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+}
+
+func (g *GoogleOAuth) ExchangeCode(ctx context.Context, code string) (*oauth2.Token, error) {
+	return g.config.Exchange(ctx, code)
+}
+
+func (g *GoogleOAuth) GetUserInfo(ctx context.Context, token *oauth2.Token) (*model.UserGoogleResp, error) {
+	client := g.config.Client(ctx, token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var user model.UserGoogleResp
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

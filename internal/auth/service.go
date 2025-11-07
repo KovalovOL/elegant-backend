@@ -9,14 +9,14 @@ import (
 	"fmt"
 )
 
-type AuthService struct {
+type Service struct {
 	oauth     *GoogleOAuth
 	jwt       *JWTManager
-	user_repo *user.UserRepository
+	user_repo *user.Repository
 }
 
-func NewAuthService(oauth *GoogleOAuth, jwt *JWTManager, user_repo *user.UserRepository) *AuthService {
-	return &AuthService{oauth: oauth, jwt: jwt, user_repo: user_repo}
+func NewService(oauth *GoogleOAuth, jwt *JWTManager, user_repo *user.Repository) *Service {
+	return &Service{oauth: oauth, jwt: jwt, user_repo: user_repo}
 }
 
 func generateState() string {
@@ -25,13 +25,13 @@ func generateState() string {
 	return hex.EncodeToString(b)
 }
 
-func (s *AuthService) StartGoogleLogin() (state, url string) {
+func (s *Service) StartGoogleLogin() (state, url string) {
 	state = generateState()
 	url = s.oauth.GetAuthURL(state)
 	return state, url
 }
 
-func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*user.User, string, error) {
+func (s *Service) HandleGoogleCallback(ctx context.Context, code string) (*user.User, string, error) {
 	token, err := s.oauth.ExchangeCode(ctx, code)
 	if err != nil {
 		return nil, "", err

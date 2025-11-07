@@ -5,15 +5,17 @@ import (
 	"database/sql"
 )
 
-type UserRepository struct {
+// type repository interface{}
+
+type Repository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewRepository(db *sql.DB) *Repository {
+	return &Repository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user CreateUser) (int, error) {
+func (r *Repository) CreateUser(ctx context.Context, user CreateUser) (int, error) {
 	var userID int
 	err := r.db.QueryRow(
 		`INSERT INTO users (email, name, github_url, linkedin_url, bio) 
@@ -27,7 +29,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user CreateUser) (int, 
 	return userID, nil
 }
 
-func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	var user User
 	err := r.db.QueryRow(
 		`SELECT id, email, name, github_url, linkedin_url, bio 
@@ -43,7 +45,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*Use
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserById(ctx context.Context, id int) (*User, error) {
+func (r *Repository) GetUserById(ctx context.Context, id int) (*User, error) {
 	var user User
 	err := r.db.QueryRow(
 		`SELECT id, email, name, github_url, linkedin_url, bio 
@@ -59,12 +61,12 @@ func (r *UserRepository) GetUserById(ctx context.Context, id int) (*User, error)
 	return &user, nil
 }
 
-func (r *UserRepository) DeleteUserById(ctx context.Context, id int) error {
+func (r *Repository) DeleteUserById(ctx context.Context, id int) error {
 	_, err := r.db.Exec(`DELETE FROM users WHERE id = $1`, id)
 	return err
 }
 
-func (r *UserRepository) UpdateUserById(ctx context.Context, id int, newUser CreateUser) error {
+func (r *Repository) UpdateUserById(ctx context.Context, id int, newUser CreateUser) error {
 	_, err := r.db.Exec(
 		`UPDATE users SET name = $1, github_url = $2, linkedin_url = $3, bio = $4 
 		 WHERE id = $5`,

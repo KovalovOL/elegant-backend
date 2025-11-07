@@ -44,8 +44,14 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"name": user.Name})
 }
 
-// 3️⃣ /me
+
 func (h *AuthHandler) Me(c *gin.Context) {
+	id := c.GetString("user_id")
 	name := c.GetString("user_name")
-	c.JSON(http.StatusOK, gin.H{"name": name})
+	email := c.GetString("user_email")
+	c.JSON(http.StatusOK, gin.H{
+		"id": id,
+		"name": name,
+		"email": email,
+	})
 }

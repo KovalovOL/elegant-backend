@@ -4,16 +4,19 @@ import (
 	"app/internal/user"
 	"context"
 	"crypto/rand"
+	"database/sql"
+	"fmt"
 	"encoding/hex"
 )
 
 type AuthService struct {
 	oauth *GoogleOAuth
 	jwt   *JWTManager
+	user_repo *user.UserRepository
 }
 
-func NewAuthService(oauth *GoogleOAuth, jwt *JWTManager) *AuthService {
-	return &AuthService{oauth: oauth, jwt: jwt}
+func NewAuthService(oauth *GoogleOAuth, jwt *JWTManager, user_repo *user.UserRepository) *AuthService {
+	return &AuthService{oauth: oauth, jwt: jwt , user_repo: user_repo}
 }
 
 func generateState() string {
@@ -28,21 +31,49 @@ func (s *AuthService) StartGoogleLogin() (state, url string) {
 	return state, url
 }
 
-func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*user.UserGoogleResp, string, error) {
+func (s *AuthService) HandleGoogleCallback(ctx context.Context, code string) (*user.User, string, error) {
 	token, err := s.oauth.ExchangeCode(ctx, code)
 	if err != nil {
 		return nil, "", err
 	}
 
-	user, err := s.oauth.GetUserInfo(ctx, token)
+	userByJWT, err := s.oauth.GetUserInfo(ctx, token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	jwt, err := s.jwt.Generate(user)
+	// Check if user exists in DB
+	existingUser, err := s.user_repo.GetUserByEmail(ctx, userByJWT.Email)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, "", err
+	}
+
+	// If not exists — create
+	if existingUser == nil {
+		newUser := user.CreaeteUser{
+			Email: userByJWT.Email,
+			Name:  userByJWT.Name,
+		}
+
+		id, err := s.user_repo.CreateUser(ctx, newUser)
+		if err != nil {
+			return nil, "", err
+		}
+
+		existingUser, err = s.user_repo.GetUserById(ctx, id)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	if existingUser == nil {
+		return nil, "", fmt.Errorf("failed to find or create user")
+	}
+
+	jwt, err := s.jwt.Generate(existingUser)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return user, jwt, nil
+	return existingUser, jwt, nil
 }

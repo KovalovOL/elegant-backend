@@ -28,7 +28,7 @@ func NewJWTManager() (*JWTManager, error) {
 	return &JWTManager{secret: []byte(secret)}, nil
 }
 
-func (j *JWTManager) Generate(user *user.UserGoogleResp) (string, error) {
+func (j *JWTManager) Generate(user *user.User) (string, error) {
 	claims := Claims{
 		UserID: user.ID,
 		Email:  user.Email,

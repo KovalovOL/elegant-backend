@@ -1,4 +1,4 @@
-package model
+package user
 
 type UserGoogleResp struct { // Google OAuth2 user info response
 	ID      string `json:"id"`
@@ -12,7 +12,7 @@ type CreaeteUser struct {
 	Name       string `json:"name"`
 	GitHubUrl  string `json:"github_url"`
 	LikedinUrl string `json:"linkedin_url"`
-	Bio 	   string `json:"bio"`
+	Bio        string `json:"bio"`
 }
 
 type User struct {

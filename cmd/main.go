@@ -1,13 +1,11 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 
 	"app/internal/auth"
-	"app/internal/service"
-	"app/internal/handler"
-	"app/internal/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -23,14 +21,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	authService := service.NewAuthService(googleOAuth, jwtManager)
-	authHandler := handler.NewAuthHandler(authService)
+	authService := auth.NewAuthService(googleOAuth, jwtManager)
+	authHandler := auth.NewAuthHandler(authService)
 
 	router.GET("/auth/google/login", authHandler.GoogleLogin)
 	router.GET("/auth/google/callback", authHandler.GoogleCallback)
 
 	protected := router.Group("/")
-	protected.Use(middleware.AuthMiddleware(jwtManager))
+	protected.Use(auth.AuthMiddleware(jwtManager))
 	{
 		protected.GET("/me", authHandler.Me)
 	}

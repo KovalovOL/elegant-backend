@@ -1,11 +1,12 @@
 package auth
 
 import (
-	"time"
-	"github.com/golang-jwt/jwt/v5"
-	"app/internal/model"
-	"os"
+	"app/internal/user"
 	"fmt"
+	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTManager struct {
@@ -13,9 +14,9 @@ type JWTManager struct {
 }
 
 type Claims struct {
-	UserID  string `json:"user_id"`
-	Email   string `json:"email"`
-	Name    string `json:"name"`
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+	Name   string `json:"name"`
 	jwt.RegisteredClaims
 }
 
@@ -27,7 +28,7 @@ func NewJWTManager() (*JWTManager, error) {
 	return &JWTManager{secret: []byte(secret)}, nil
 }
 
-func (j *JWTManager) Generate(user *model.UserGoogleResp) (string, error) {
+func (j *JWTManager) Generate(user *user.UserGoogleResp) (string, error) {
 	claims := Claims{
 		UserID: user.ID,
 		Email:  user.Email,

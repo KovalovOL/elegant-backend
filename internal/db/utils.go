@@ -41,3 +41,16 @@ func createCVTable(db *sql.DB) error {
 	}
 	return  nil
 }
+
+func createTagTable(db *sql.DB) error {
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS tags (
+			tag_id SERIAL PRIMARY KEY,
+			name VARCHAR UNIQUE NOT NULL
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("error creating users table: %w", err)
+	}
+	return  nil
+}

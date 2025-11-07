@@ -36,6 +36,9 @@ func ConnectDB() (*sql.DB, error) {
 	if err = createCVTable(db); err != nil {
 		return nil, err
 	}
+	if err = createTagTable(db); err != nil {
+		return nil, err
+	}
 
 	return db, nil
 }

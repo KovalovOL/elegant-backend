@@ -4,10 +4,12 @@ import (
 	"log"
 
 	"app/internal/auth"
-	"github.com/joho/godotenv"
-	"github.com/gin-gonic/gin"
+	"app/internal/cv"
 	"app/internal/db"
 	"app/internal/user"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func init() {
@@ -34,7 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	userRepo := user.NewUserRepository(db)
 	userService := user.NewUserService(userRepo)
 	userHandler := user.NewUserHandler(userService)
@@ -42,13 +44,13 @@ func main() {
 	authService := auth.NewAuthService(googleOAuth, jwtManager, userRepo)
 	authHandler := auth.NewAuthHandler(authService)
 	
+	cvRepo := cv.NewCVRepository(db)
+	cvService := cv.NewCVService(cvRepo)
+	cvHandler := cv.NewCVHandler(cvService)
 
 	router := gin.Default()
 	router.GET("/auth/google/login", authHandler.GoogleLogin)
 	router.GET("/auth/google/callback", authHandler.GoogleCallback)
-
-//	router.DELETE("/user", userHandler.DeleteCurrentUser)
-//	router.PUT("/user", userHandler.UpdateCurrentUser)
 
 	protected := router.Group("/")
 	protected.Use(auth.AuthMiddleware(jwtManager))
@@ -56,6 +58,12 @@ func main() {
 		protected.GET("/me", authHandler.Me)
 		protected.DELETE("/user", userHandler.DeleteCurrentUser)
 		protected.PUT("/user", userHandler.UpdateCurrentUser)
+
+		protected.GET("/cvs", cvHandler.GetAllCVsByCurrentUser)
+		protected.GET("/cvs/:cv_id", cvHandler.GetCVByID)
+		protected.POST("/cvs", cvHandler.CreateCV)
+		protected.PUT("/cvs/:cv_id", cvHandler.UpdateCV)
+		protected.DELETE("/cvs/:cv_id", cvHandler.DeleteCV)
 	}
 
 	router.Run(":8080")

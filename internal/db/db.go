@@ -10,23 +10,6 @@ import (
 )
 
 
-func createUserTable(db *sql.DB) error {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id SERIAL PRIMARY KEY,
-			name VARCHAR NOT NULL,
-			email VARCHAR UNIQUE NOT NULL,
-			github_url VARCHAR,
-			linkedin_url VARCHAR,
-			bio TEXT
-		)
-	`)
-	if err != nil {
-		return fmt.Errorf("error creating users table: %w", err)
-	}
-	return  nil
-}
-
 func ConnectDB() (*sql.DB, error) {
 	dsn := fmt.Sprintf(
     	"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
@@ -47,8 +30,10 @@ func ConnectDB() (*sql.DB, error) {
 		return  nil, err
 	}
 
-	err = createUserTable(db)
-	if err != nil {
+	if err = createUserTable(db); err != nil {
+		return nil, err
+	}
+	if err = createCVTable(db); err != nil {
 		return nil, err
 	}
 

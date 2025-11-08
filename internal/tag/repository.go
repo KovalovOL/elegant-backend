@@ -14,8 +14,7 @@ func NewTagRepository(db *sql.DB) *TagRepository {
 	return &TagRepository{db: db}
 }
 
-
-func (r *TagRepository) Create(ctx context.Context, input *TagCreate) (int, error) {
+func (r *TagRepository) Create(ctx context.Context, input *CreateTag) (int, error) {
 	query := `
 		INSERT INTO tags (name)
 		VALUES ($1)
@@ -74,7 +73,7 @@ func (r *TagRepository) GetAll(ctx context.Context) ([]*Tag, error) {
 	return tags, nil
 }
 
-func (r *TagRepository) Update(ctx context.Context, id int, input *TagCreate) error {
+func (r *TagRepository) Update(ctx context.Context, id int, input *CreateTag) error {
 	query := `
 		UPDATE tags
 		SET name = $1

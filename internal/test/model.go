@@ -2,11 +2,17 @@ package test
 
 import (
 	"app/internal/tag"
+	"encoding/json"
 )
 
-type TaskOption struct {
-	Option string `json:"option"`
-	IsRight bool `json:"is_right"`
+type QuizeData struct {
+	Text  string `json:"text"`
+	IsRight bool   `json:"is_right"`
+}
+
+type QuizeTaskData struct {	
+	Question string `json:"question"`
+	Options []QuizeData
 }
 
 type OpenQuestion struct {
@@ -14,36 +20,41 @@ type OpenQuestion struct {
 }
 
 type LifeCodeQuestion struct {
-	Name string `json:"name"`
-	Description string `json:"description"`
-	StartTeplate string `json:"start_teplate"`	
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	StartTeplate string `json:"start_teplate"`
 }
 
+/*
+Types:
+	"quize"
+	"oepn"
+	"liveCode"
+*/
+
 type CreateTask struct {
-	TestID int  `json:"test_id"`
-	Type string `json:"type"`
-	Options string `json:"options"` //[]TaskOption or OpenQuestion or LifeCodeQuestion
+	TestID int    `json:"test_id"`
+	Type   string `json:"type"`
+	Data   json.RawMessage `json:"data"` //[]TaskOption or OpenQuestion or LifeCodeQuestion
 }
 
 type Task struct {
 	CreateTask
-	TaskID int  `json:"task_id"`
-
+	TaskID int `json:"task_id"`
 }
 
 type CreateTest struct {
-	Title string `json:"title"`
-	TimeLimit int `json:"time_limit"`
-	Type string `json:"type"`
-	Tasks []CreateTask
+	Title     string `json:"title"`
+	TimeLimit int    `json:"time_limit"`
+	Type      string `json:"type"`
+	Tasks     []CreateTask
 }
 
 type Test struct {
 	CreateTest
-	Tags []tag.Tag
+	Tags   []tag.Tag
 	TestID int `json:"test_id"`
 }
-
 
 type CreateTestRequest struct {
 	Title     string       `json:"title"`

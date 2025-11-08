@@ -61,7 +61,7 @@ func (r *TestRepository) CreateTestFull(ctx context.Context, newTest CreateTest,
 
 	//Create Tasts
 	for _, task := range newTest.Tasks {
-		optionsJSON, err := json.Marshal(task.Options)
+		optionsJSON, err := json.Marshal(task.Data)
 		if err != nil {
 			return 0, err
 		}
@@ -113,28 +113,22 @@ func (r *TestRepository) GetAllTests(ctx context.Context) ([]Test, error) {
 			return nil, err
 		}
 
-		// Parse tasks with proper handling of the options JSON string
+		// Parse tasks - directly use the JSON string as the options value
 		var tasksRaw []struct {
 			TaskID  int    `json:"task_id"`
 			Type    string `json:"type"`
-			Options string `json:"options"` // This is stored as a JSON string in the database
+			Options json.RawMessage `json:"options"` // This is already a JSON string from the database
 		}
 		if err := json.Unmarshal(tasksJSON, &tasksRaw); err != nil {
 			return nil, err
 		}
 
 		for _, t := range tasksRaw {
-			var options string
-			// First unmarshal the JSON string to get the actual options array
-			if err := json.Unmarshal([]byte(t.Options), &options); err != nil {
-				return nil, err
-			}
-			
 			task := Task{
 				CreateTask: CreateTask{
-					TestID:  test.TestID,
-					Type:    t.Type,
-					Options: options,
+					TestID: test.TestID,
+					Type:   t.Type,
+					Data:   t.Options, // Directly use the JSON string
 				},
 				TaskID: t.TaskID,
 			}
@@ -150,11 +144,11 @@ func (r *TestRepository) GetAllTests(ctx context.Context) ([]Test, error) {
 }
 
 func (r *TestRepository) GetTestsByTags(ctx context.Context, tagIDs []int) ([]Test, error) {
-    if len(tagIDs) == 0 {
-        return r.GetAllTests(ctx)
-    }
+	if len(tagIDs) == 0 {
+		return r.GetAllTests(ctx)
+	}
 
-    rows, err := r.db.Query(`
+	rows, err := r.db.Query(`
         SELECT 
             t.test_id, t.title, t.time_limit, t.type,
             COALESCE(json_agg(DISTINCT jsonb_build_object('tag_id', tg.tag_id, 'name', tg.name)) 
@@ -176,70 +170,65 @@ func (r *TestRepository) GetTestsByTags(ctx context.Context, tagIDs []int) ([]Te
         )
         GROUP BY t.test_id
     `, pq.Array(tagIDs), len(tagIDs))
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var tests []Test
-    for rows.Next() {
-        var test Test
-        var tagsJSON, tasksJSON []byte
+	var tests []Test
+	for rows.Next() {
+		var test Test
+		var tagsJSON, tasksJSON []byte
 
-        if err := rows.Scan(&test.TestID, &test.Title, &test.TimeLimit, &test.Type, &tagsJSON, &tasksJSON); err != nil {
-            return nil, err
-        }
+		if err := rows.Scan(&test.TestID, &test.Title, &test.TimeLimit, &test.Type, &tagsJSON, &tasksJSON); err != nil {
+			return nil, err
+		}
 
-        if err := json.Unmarshal(tagsJSON, &test.Tags); err != nil {
-            return nil, err
-        }
+		if err := json.Unmarshal(tagsJSON, &test.Tags); err != nil {
+			return nil, err
+		}
 
-        // Parse tasks
-        var tasksRaw []struct {
-            TaskID  int    `json:"task_id"`
-            Type    string `json:"type"`
-            Options string `json:"options"`
-        }
-        if err := json.Unmarshal(tasksJSON, &tasksRaw); err != nil {
-            return nil, err
-        }
+		// Parse tasks
+		var tasksRaw []struct {
+			TaskID  int    `json:"task_id"`
+			Type    string `json:"type"`
+			Options json.RawMessage `json:"options"` // This is already a JSON string from the database
+		}
+		if err := json.Unmarshal(tasksJSON, &tasksRaw); err != nil {
+			return nil, err
+		}
 
-        for _, t := range tasksRaw {
-            var options string
-            if err := json.Unmarshal([]byte(t.Options), &options); err != nil {
-                return nil, err
-            }
-            
-            task := Task{
-                CreateTask: CreateTask{
-                    TestID:  test.TestID,
-                    Type:    t.Type,
-                    Options: options,
-                },
-                TaskID: t.TaskID,
-            }
-            test.Tasks = append(test.Tasks, task.CreateTask)
-        }
+		for _, t := range tasksRaw {
+			task := Task{
+				CreateTask: CreateTask{
+					TestID: test.TestID,
+					Type:   t.Type,
+					Data:   t.Options, // Directly use the JSON string
+				},
+				TaskID: t.TaskID,
+			}
+			test.Tasks = append(test.Tasks, task.CreateTask)
+		}
 
-        tests = append(tests, test)
-    }
+		tests = append(tests, test)
+	}
 
-    if err := rows.Err(); err != nil {
-        return nil, err
-    }
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if tests == nil {
 		return []Test{}, nil
 	}
-    return tests, nil
+	return tests, nil
 }
 
 func (r *TestRepository) GetTestByID(ctx context.Context, testID int) (*Test, error) {
-    if testID <= 0 {
-        return nil, fmt.Errorf("invalid test ID: %d", testID)
-    }
+	if testID <= 0 {
+		return nil, fmt.Errorf("invalid test ID: %d", testID)
+	}
 
-    query := `
+	query := `
         SELECT 
             t.test_id, t.title, t.time_limit, t.type,
             COALESCE(json_agg(DISTINCT jsonb_build_object('tag_id', tg.tag_id, 'name', tg.name)) 
@@ -258,107 +247,102 @@ func (r *TestRepository) GetTestByID(ctx context.Context, testID int) (*Test, er
         GROUP BY t.test_id
     `
 
-    var test Test
-    var tagsJSON, tasksJSON []byte
+	var test Test
+	var tagsJSON, tasksJSON []byte
 
-    err := r.db.QueryRowContext(ctx, query, testID).Scan(
-        &test.TestID, &test.Title, &test.TimeLimit, &test.Type, 
-        &tagsJSON, &tasksJSON,
-    )
-    
-    if err != nil {
-        if err == sql.ErrNoRows {
-            return nil, fmt.Errorf("test with ID %d not found", testID)
-        }
-        return nil, fmt.Errorf("failed to get test: %w", err)
-    }
+	err := r.db.QueryRowContext(ctx, query, testID).Scan(
+		&test.TestID, &test.Title, &test.TimeLimit, &test.Type,
+		&tagsJSON, &tasksJSON,
+	)
 
-    // Unmarshal tags
-    if err := json.Unmarshal(tagsJSON, &test.Tags); err != nil {
-        return nil, fmt.Errorf("failed to unmarshal tags: %w", err)
-    }
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("test with ID %d not found", testID)
+		}
+		return nil, fmt.Errorf("failed to get test: %w", err)
+	}
 
-    // Unmarshal tasks
-    var tasksRaw []struct {
-        TaskID  int    `json:"task_id"`
-        TestID  int    `json:"test_id"`
-        Type    string `json:"type"`
-        Options string `json:"options"`
-    }
-    if err := json.Unmarshal(tasksJSON, &tasksRaw); err != nil {
-        return nil, fmt.Errorf("failed to unmarshal tasks: %w", err)
-    }
+	// Unmarshal tags
+	if err := json.Unmarshal(tagsJSON, &test.Tags); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tags: %w", err)
+	}
 
-    for _, t := range tasksRaw {
-        var options string
-        if err := json.Unmarshal([]byte(t.Options), &options); err != nil {
-            return nil, fmt.Errorf("failed to unmarshal task options: %w", err)
-        }
-        
-        task := Task{
-            CreateTask: CreateTask{
-                TestID:  t.TestID,
-                Type:    t.Type,
-                Options: options,
-            },
-            TaskID: t.TaskID,
-        }
-        test.Tasks = append(test.Tasks, task.CreateTask)
-    }
+	// Unmarshal tasks - use json.RawMessage to preserve the original JSON
+	var tasksRaw []struct {
+		TaskID  int             `json:"task_id"`
+		TestID  int             `json:"test_id"`
+		Type    string          `json:"type"`
+		Options json.RawMessage `json:"options"` // Use RawMessage here too
+	}
+	if err := json.Unmarshal(tasksJSON, &tasksRaw); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tasks: %w", err)
+	}
 
-    return &test, nil
+	for _, t := range tasksRaw {
+		task := Task{
+			CreateTask: CreateTask{
+				TestID:  t.TestID,
+				Type:    t.Type,
+				Data: t.Options, // Direct assignment - no extra unmarshaling
+			},
+			TaskID: t.TaskID,
+		}
+		test.Tasks = append(test.Tasks, task.CreateTask)
+	}
+
+	return &test, nil
 }
 
 func (r *TestRepository) DeleteTest(ctx context.Context, testID int) error {
-    tx, err := r.db.Begin()
-    if err != nil {
-        return err
-    }
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
 
-    defer func() {
-        if err != nil {
-            tx.Rollback()
-        } else {
-            tx.Commit()
-        }
-    }()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
 
-    // First, check if test exists
-    var exists bool
-    err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM tests WHERE test_id = $1)`, testID).Scan(&exists)
-    if err != nil {
-        return err
-    }
-    if !exists {
-        return fmt.Errorf("test with ID %d not found", testID)
-    }
+	// First, check if test exists
+	var exists bool
+	err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM tests WHERE test_id = $1)`, testID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("test with ID %d not found", testID)
+	}
 
-    // Delete related records in test_tags (many-to-many relationship)
-    _, err = tx.ExecContext(ctx, `DELETE FROM test_tags WHERE test_id = $1`, testID)
-    if err != nil {
-        return err
-    }
+	// Delete related records in test_tags (many-to-many relationship)
+	_, err = tx.ExecContext(ctx, `DELETE FROM test_tags WHERE test_id = $1`, testID)
+	if err != nil {
+		return err
+	}
 
-    // Delete tasks associated with the test
-    _, err = tx.ExecContext(ctx, `DELETE FROM tasks WHERE test_id = $1`, testID)
-    if err != nil {
-        return err
-    }
+	// Delete tasks associated with the test
+	_, err = tx.ExecContext(ctx, `DELETE FROM tasks WHERE test_id = $1`, testID)
+	if err != nil {
+		return err
+	}
 
-    // Finally, delete the test itself
-    result, err := tx.ExecContext(ctx, `DELETE FROM tests WHERE test_id = $1`, testID)
-    if err != nil {
-        return err
-    }
+	// Finally, delete the test itself
+	result, err := tx.ExecContext(ctx, `DELETE FROM tests WHERE test_id = $1`, testID)
+	if err != nil {
+		return err
+	}
 
-    // Check if any row was actually deleted
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        return err
-    }
-    if rowsAffected == 0 {
-        return fmt.Errorf("test with ID %d not found", testID)
-    }
+	// Check if any row was actually deleted
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("test with ID %d not found", testID)
+	}
 
-    return nil
+	return nil
 }

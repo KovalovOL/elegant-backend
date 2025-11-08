@@ -12,7 +12,7 @@ type QuizeData struct {
 
 type QuizeTaskData struct {	
 	Question string `json:"question"`
-	Options []QuizeData
+	Options []QuizeData `json:"options"`
 }
 
 type OpenQuestion struct {

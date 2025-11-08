@@ -4,7 +4,10 @@ import (
 	"log"
 
 	"app/internal/auth"
+	"app/internal/cv"
 	"app/internal/db"
+	"app/internal/tag"
+	"app/internal/test"
 	"app/internal/user"
 
 	"github.com/gin-contrib/cors"
@@ -36,12 +39,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userRepo := user.NewRepository(db)
+	userRepo := user.NewUserRepository(db)
 	userService := user.NewService(userRepo)
-	userHandler := user.NewHandler(userService)
+	userHandler := user.NewUserHandler(userService)
 
-	authService := auth.NewService(googleOAuth, jwtManager, userRepo)
-	authHandler := auth.NewHandler(authService)
+	authService := auth.NewAuthService(googleOAuth, jwtManager, userRepo)
+	authHandler := auth.NewAuthHandler(authService)
+
+	cvRepo := cv.NewCVRepository(db)
+	cvService := cv.NewCVService(cvRepo)
+	cvHandler := cv.NewCVHandler(cvService)
+
+	tagRepo := tag.NewTagRepository(db)
+	tagService := tag.NewTagService(tagRepo)
+	tagHandler := tag.NewTagHandler(tagService)
+
+	testRepo := test.NewTestRepository(db)
+	testService := test.NewTestService(testRepo)
+	testHandler := test.NewTestHandler(testService)
 
 	router := gin.Default()
 
@@ -55,6 +70,14 @@ func main() {
 	router.GET("/auth/google/login", authHandler.GoogleLogin)
 	router.GET("/auth/google/callback", authHandler.GoogleCallback)
 
+	router.GET("/tags", tagHandler.GetAllTags)
+	router.GET("/tags/:tag_id", tagHandler.GetTagById)
+
+	router.GET("/test", testHandler.GetTestsByTags)
+	router.GET("test/:test_id", testHandler.GetTestById)
+	router.POST("/test", testHandler.CreateTest)
+	router.DELETE("/test/:test_id", testHandler.DeleteTest)
+
 	protected := router.Group("/")
 	protected.Use(auth.AuthMiddleware(jwtManager))
 	{
@@ -65,6 +88,12 @@ func main() {
 		// User
 		protected.DELETE("/user", userHandler.DeleteCurrentUser)
 		protected.PUT("/user", userHandler.UpdateCurrentUser)
+
+		protected.GET("/cvs", cvHandler.GetAllCVsByCurrentUser)
+		protected.GET("/cvs/:cv_id", cvHandler.GetCVByID)
+		protected.POST("/cvs", cvHandler.CreateCV)
+		protected.PUT("/cvs/:cv_id", cvHandler.UpdateCV)
+		protected.DELETE("/cvs/:cv_id", cvHandler.DeleteCV)
 	}
 
 	router.Run(":8080")

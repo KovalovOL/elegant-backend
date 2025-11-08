@@ -67,7 +67,6 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-
 	router.GET("/auth/google/login", authHandler.GoogleLogin)
 	router.GET("/auth/google/callback", authHandler.GoogleCallback)
 
@@ -83,6 +82,7 @@ func main() {
 	protected.Use(auth.AuthMiddleware(jwtManager))
 	{
 		protected.GET("/me", authHandler.Me)
+		protected.GET("/logout", authHandler.Logout)
 		protected.DELETE("/user", userHandler.DeleteCurrentUser)
 		protected.PUT("/user", userHandler.UpdateCurrentUser)
 

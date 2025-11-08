@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,7 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 	}
 
 	code := c.Query("code")
-	user, token, err := h.service.HandleGoogleCallback(c, code)
+	_, token, err := h.service.HandleGoogleCallback(c, code)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -41,17 +42,23 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 
 	c.SetCookie("token", token, 24*60*60, "/", "", false, true)
 
-	c.JSON(http.StatusOK, gin.H{"name": user.Name})
+	c.Redirect(http.StatusSeeOther, os.Getenv("FRONTEND_URL")+"/dashboard")
 }
-
 
 func (h *AuthHandler) Me(c *gin.Context) {
 	id := c.GetString("user_id")
 	name := c.GetString("user_name")
 	email := c.GetString("user_email")
 	c.JSON(http.StatusOK, gin.H{
-		"id": id,
-		"name": name,
+		"id":    id,
+		"name":  name,
 		"email": email,
 	})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+
+	c.SetCookie("token", "", -1, "/", "", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out and user deleted"})
 }

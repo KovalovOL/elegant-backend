@@ -7,6 +7,7 @@ import (
 	"app/internal/cv"
 	"app/internal/db"
 	"app/internal/tag"
+	"app/internal/test"
 	"app/internal/user"
 
 	"github.com/gin-gonic/gin"
@@ -53,12 +54,19 @@ func main() {
 	tagService := tag.NewTagService(tagRepo)
 	tagHandler := tag.NewTagHandler(tagService)
 
+	testRepo := test.NewTestRepository(db)
+	testService := test.NewTestService(testRepo)
+	testHandler := test.NewTestHandler(testService)
+
 	router := gin.Default()
 	router.GET("/auth/google/login", authHandler.GoogleLogin)
 	router.GET("/auth/google/callback", authHandler.GoogleCallback)
 
 	router.GET("/tags", tagHandler.GetAllTags)
 	router.GET("/tags/:tag_id", tagHandler.GetTagById)
+
+	router.GET("/test", testHandler.GetTestsByTags)
+	router.POST("/test", testHandler.CreateTest)
 
 	protected := router.Group("/")
 	protected.Use(auth.AuthMiddleware(jwtManager))

@@ -39,12 +39,15 @@ func ConnectDB() (*sql.DB, error) {
 	if err = createTagTable(db); err != nil {
 		return nil, err
 	}
-	// if err = createTestTable(db); err != nil {
-	// 	return nil, err
-	// }
-	// if err = createTestTagTable(db); err != nil {
-	// 	return nil, err
-	// }
+	if err = createTestTable(db); err != nil {
+		return nil, err
+	}
+	if err = createTaskTable(db); err != nil {
+		return nil, err
+	}
+	if err = createTestTagTable(db); err != nil {
+		return nil, err
+	}
 
 	return db, nil
 }

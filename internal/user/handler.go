@@ -4,15 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserHandler struct {
-	service *UserService
+type Handler struct {
+	service *Service
 }
 
-func NewUserHandler(s *UserService) *UserHandler {
-	return &UserHandler{service: s}
+func NewHandler(s *Service) *Handler {
+	return &Handler{service: s}
 }
 
-func (h *UserHandler) DeleteCurrentUser(c *gin.Context) {
+func (h *Handler) DeleteCurrentUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	err := h.service.DeleteCurrentUser(ctx, c)
 	if err != nil {
@@ -22,7 +22,7 @@ func (h *UserHandler) DeleteCurrentUser(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "user deleted"})
 }
 
-func (h *UserHandler) UpdateCurrentUser(c *gin.Context) {
+func (h *Handler) UpdateCurrentUser(c *gin.Context) {
 	var user CreateUser
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(400, gin.H{"error": "invalid request"})

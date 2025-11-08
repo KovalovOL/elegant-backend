@@ -7,15 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserService struct {
-	repo *UserRepository
+type Service struct {
+	repo *Repository
 }
 
-func NewService(r *UserRepository) *UserService {
-	return &UserService{repo: r}
+func NewService(r *Repository) *Service {
+	return &Service{repo: r}
 }
 
-func (s *UserService) DeleteCurrentUser(ctx context.Context, c *gin.Context) error {
+func (s *Service) DeleteCurrentUser(ctx context.Context, c *gin.Context) error {
 	id, _ := strconv.Atoi(c.GetString("user_id"))
 	err := s.repo.DeleteUserById(c, id)
 	if err != nil {
@@ -27,7 +27,7 @@ func (s *UserService) DeleteCurrentUser(ctx context.Context, c *gin.Context) err
 	return nil
 }
 
-func (s *UserService) UpdateCurrentUser(ctx context.Context, c *gin.Context, newUser CreateUser) error {
+func (s *Service) UpdateCurrentUser(ctx context.Context, c *gin.Context, newUser CreateUser) error {
 	id, _ := strconv.Atoi(c.GetString("user_id"))
 	err := s.repo.UpdateUserById(ctx, id, newUser)
 	if err != nil {

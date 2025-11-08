@@ -1,8 +1,10 @@
 from fastapi import FastAPI
+from dotenv import load_dotenv
 from app.schemas import CVCreateRequest
 
 
 app = FastAPI
+load_dotenv()
 
 
 @app.get("/ping")
@@ -13,4 +15,4 @@ async def ping():
 async def create_cv_by_desctiption(
     desctiption CVCreateRequest
 ):
-
+    

@@ -1,9 +1,10 @@
 package test
 
 import (
-	"github.com/gin-gonic/gin"
-	"strings"
 	"strconv"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type TestHandler struct {
@@ -38,6 +39,22 @@ func (h *TestHandler) CreateTest(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"test_id": id})
+}
+
+func (h *TestHandler) GetTestById(c *gin.Context) {
+	testID, err := strconv.Atoi(c.Param("test_id"))
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx := c.Request.Context()
+	test, err := h.service.GetTestById(ctx, testID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, test)
 }
 
 func (h *TestHandler) GetTestsByTags(c *gin.Context) {
@@ -76,3 +93,20 @@ func parseTagIDs(tagStr string) []int {
     
     return tagIDs
 }
+
+func (h *TestHandler) DeleteTest(c *gin.Context) {
+	testID, err := strconv.Atoi(c.Param("test_id"))
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	
+	ctx := c.Request.Context()
+	err = h.service.DeleteTestById(ctx, testID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "cv deleted"})
+
+} 

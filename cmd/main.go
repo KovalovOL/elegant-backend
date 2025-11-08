@@ -66,7 +66,9 @@ func main() {
 	router.GET("/tags/:tag_id", tagHandler.GetTagById)
 
 	router.GET("/test", testHandler.GetTestsByTags)
+	router.GET("test/:test_id", testHandler.GetTestById)
 	router.POST("/test", testHandler.CreateTest)
+	router.DELETE("/test/:test_id", testHandler.DeleteTest)
 
 	protected := router.Group("/")
 	protected.Use(auth.AuthMiddleware(jwtManager))

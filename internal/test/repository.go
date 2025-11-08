@@ -124,7 +124,7 @@ func (r *TestRepository) GetAllTests(ctx context.Context) ([]Test, error) {
 		}
 
 		for _, t := range tasksRaw {
-			var options []TaskOption
+			var options string
 			// First unmarshal the JSON string to get the actual options array
 			if err := json.Unmarshal([]byte(t.Options), &options); err != nil {
 				return nil, err
@@ -205,7 +205,7 @@ func (r *TestRepository) GetTestsByTags(ctx context.Context, tagIDs []int) ([]Te
         }
 
         for _, t := range tasksRaw {
-            var options []TaskOption
+            var options string
             if err := json.Unmarshal([]byte(t.Options), &options); err != nil {
                 return nil, err
             }
@@ -290,7 +290,7 @@ func (r *TestRepository) GetTestByID(ctx context.Context, testID int) (*Test, er
     }
 
     for _, t := range tasksRaw {
-        var options []TaskOption
+        var options string
         if err := json.Unmarshal([]byte(t.Options), &options); err != nil {
             return nil, fmt.Errorf("failed to unmarshal task options: %w", err)
         }

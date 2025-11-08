@@ -9,10 +9,14 @@ type TaskOption struct {
 	IsRight bool `json:"is_right"`
 }
 
+type OpenQuestion struct {
+	Description string `json:"description"`
+}
+
 type CreateTask struct {
 	TestID int  `json:"test_id"`
 	Type string `json:"type"`
-	Options []TaskOption
+	Options string `json:"options"` //[]TaskOption or OpenQuestion, 
 }
 
 type Task struct {

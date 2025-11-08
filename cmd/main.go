@@ -28,24 +28,23 @@ func main() {
 	}
 	defer db.Close()
 
-	
 	googleOAuth, err := auth.NewGoogleOAuth()
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	jwtManager, err := auth.NewJWTManager()
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	userRepo := user.NewUserRepository(db)
-	userService := user.NewUserService(userRepo)
+	userService := user.NewService(userRepo)
 	userHandler := user.NewUserHandler(userService)
 
 	authService := auth.NewAuthService(googleOAuth, jwtManager, userRepo)
 	authHandler := auth.NewAuthHandler(authService)
-	
+
 	cvRepo := cv.NewCVRepository(db)
 	cvService := cv.NewCVService(cvRepo)
 	cvHandler := cv.NewCVHandler(cvService)

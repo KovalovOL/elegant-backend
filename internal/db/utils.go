@@ -55,32 +55,32 @@ func createTagTable(db *sql.DB) error {
 	return  nil
 }
 
-func createTestTable(db *sql.DB) error {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS tests (
-			test_id SERIAL PRIMARY KEY,	
-			title VARCHAR(255) UNIQUE NOT NULL,
-			time_limit INTEGER,
-			type VARCHAR NOT NULL
-		)
-	`)
-	if err != nil {
-		return fmt.Errorf("error creating users table: %w", err)
-	}
-	return  nil
-}
+// func createTestTable(db *sql.DB) error {
+// 	_, err := db.Exec(`
+// 		CREATE TABLE IF NOT EXISTS tests (
+// 			test_id SERIAL PRIMARY KEY,	
+// 			title VARCHAR(255) UNIQUE NOT NULL,
+// 			time_limit INTEGER,
+// 			type VARCHAR NOT NULL
+// 		)
+// 	`)
+// 	if err != nil {
+// 		return fmt.Errorf("error creating users table: %w", err)
+// 	}
+// 	return  nil
+// }
 
-func createTestTagTable(db *sql.DB) error {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS test_tags (
-			id SERIAL PRIMARY KEY,
-			tag_id INTEGER REFERENCES tags(tag_id) ON DELETE CASCADE,
-			test_id INTEGER REFERENCES tests(test_id) ON DELETE CASCADE,
-			UNIQUE (test_id, tag_id)
-		)
-	`)
-	if err != nil {
-		return fmt.Errorf("error creating users table: %w", err)
-	}
-	return  nil
-}
+// func createTestTagTable(db *sql.DB) error {
+// 	_, err := db.Exec(`
+// 		CREATE TABLE IF NOT EXISTS test_tags (
+// 			id SERIAL PRIMARY KEY,
+// 			tag_id INTEGER REFERENCES tags(tag_id) ON DELETE CASCADE,
+// 			test_id INTEGER REFERENCES tests(test_id) ON DELETE CASCADE,
+// 			UNIQUE (test_id, tag_id)
+// 		)
+// 	`)
+// 	if err != nil {
+// 		return fmt.Errorf("error creating users table: %w", err)
+// 	}
+// 	return  nil
+// }

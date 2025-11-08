@@ -13,10 +13,16 @@ type OpenQuestion struct {
 	Description string `json:"description"`
 }
 
+type LifeCodeQuestion struct {
+	Name string `json:"name"`
+	Description string `json:"description"`
+	StartTeplate string `json:"start_teplate"`	
+}
+
 type CreateTask struct {
 	TestID int  `json:"test_id"`
 	Type string `json:"type"`
-	Options string `json:"options"` //[]TaskOption or OpenQuestion, 
+	Options string `json:"options"` //[]TaskOption or OpenQuestion or LifeCodeQuestion
 }
 
 type Task struct {

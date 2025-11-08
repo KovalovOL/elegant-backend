@@ -1,12 +1,12 @@
-package middleware
+package auth
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"app/internal/auth"
+
+	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleware(jwtManager *auth.JWTManager) gin.HandlerFunc {
+func AuthMiddleware(jwtManager *JWTManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := c.Cookie("token")
 		if err != nil || token == "" {
@@ -21,6 +21,8 @@ func AuthMiddleware(jwtManager *auth.JWTManager) gin.HandlerFunc {
 		}
 
 		c.Set("user_name", claims.Name)
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
 		c.Next()
 	}
 }

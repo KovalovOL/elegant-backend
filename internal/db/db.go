@@ -14,8 +14,11 @@ func createUserTable(db *sql.DB) error {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
-			username VARCHAR(50) NOT NULL UNIQUE,
-			hashed_password TEXT NOT NULL
+			name VARCHAR NOT NULL,
+			email VARCHAR UNIQUE NOT NULL,
+			github_url VARCHAR,
+			linkedin_url VARCHAR,
+			bio TEXT
 		)
 	`)
 	if err != nil {

@@ -1,14 +1,14 @@
 package auth
 
 import (
+	"app/internal/user"
 	"context"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"os"
 
-	"app/internal/model"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 type GoogleOAuth struct {
@@ -42,7 +42,7 @@ func (g *GoogleOAuth) ExchangeCode(ctx context.Context, code string) (*oauth2.To
 	return g.config.Exchange(ctx, code)
 }
 
-func (g *GoogleOAuth) GetUserInfo(ctx context.Context, token *oauth2.Token) (*model.UserGoogleResp, error) {
+func (g *GoogleOAuth) GetUserInfo(ctx context.Context, token *oauth2.Token) (*user.UserGoogleResp, error) {
 	client := g.config.Client(ctx, token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
@@ -50,7 +50,7 @@ func (g *GoogleOAuth) GetUserInfo(ctx context.Context, token *oauth2.Token) (*mo
 	}
 	defer resp.Body.Close()
 
-	var user model.UserGoogleResp
+	var user user.UserGoogleResp
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		return nil, err
 	}
